@@ -11,8 +11,8 @@ class HMM:
             self.trainSents, self.testSents = self.splitTrainingTesting()
             self.words, self.tags = self.splitWordsTags()
             self.tagsDistribution = FreqDist(self.tags)
-
-            #self.output()
+            self.uniqueTags = self.getUniqueTags()
+            self.output()
 
         def getSentences(self, selected_tagset):
             tagged_sents = self.corpus.tagged_sents(tagset=selected_tagset)
@@ -27,7 +27,7 @@ class HMM:
         def output(self):
             print("Training Data: "+str(self.trainSize)+" Sentences")
             print("Testing Data: "+str(self.testingSize)+" Sentences")
-            print(self.words)
+            print(self.uniqueTags)
 
         def splitWordsTags(self):
             words = []
@@ -39,6 +39,10 @@ class HMM:
                 tags += startDelimeter + [t for (_, t) in sentances] + endDelimeter
             return words, tags
 
+        def getUniqueTags(self):
+            tagSet = set(self.tags)
+            tagList = list(tagSet)
+            return tagList
 
 
 def main():
