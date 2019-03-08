@@ -13,8 +13,8 @@ print("Words")
 print(words)
 print("----------")
 
-print("First")
-print(first)
+print("Sents")
+print(sents)
 print("----------")
 
 print("Tags")
