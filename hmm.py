@@ -7,8 +7,8 @@ class HMM:
         def __init__(self, corpus, tagset=""):
             self.corpus = corpus
             self.taggedSents, self.sents = self.getSentences(tagset)
-            self.trainSize = int(len(self.taggedSents) * 0.95)
-            self.testingSize = 5
+            self.trainSize = int(len(self.taggedSents) * 0.90)
+            self.testingSize = 500
             self.trainSents, self.testSents = self.splitTrainingTesting()
             self.words, self.tags = self.splitWordsTags()
             self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
@@ -70,9 +70,13 @@ class HMM:
         def output(self):
             print("Training Data: "+str(self.trainSize)+" Sentences")
             print("Testing Data: "+str(self.testingSize)+" Sentences")
-            print(self.testingTags)
-            print("--------------------------")
-            print(self.finalTags)
+            # print(self.testingTags)
+            # print("--------------------------")
+            # print(self.finalTags)
+            # print("--------------------------")
+            commonList = [i for i, j in zip(self.testingTags, self.finalTags) if i == j]
+            percent=len(commonList)/len(self.testingTags)
+            print(str(percent)+"% Accuracy")
 
         def splitWordsTags(self):
             words = []
