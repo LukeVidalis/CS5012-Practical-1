@@ -12,12 +12,30 @@ class HMM:
             self.words, self.tags = self.splitWordsTags()
             self.tagsDistribution = FreqDist(self.tags)
             self.uniqueTags = self.getUniqueTags()
+            self.wordsDist, self.tagsDist = self.setProbDistributions()
             self.output()
 
+        def setProbDistributions(self):
+            tagMap={}
+            wordMap={}
+
+            for t in self.uniqueTags:
+                tagList=[]
+                wordList=[]
+                for i in range(len(self.tags)):
+                    if self.tags[i] == t:
+                        wordList.append(self.words[i])
+                        if i < (len(self.tags)-1):
+                            tagList.append(self.tags[i+1])
+                tagMap[t] = WittenBellProbDist(FreqDist(tagList), bins=1e5)
+                wordMap[t] = WittenBellProbDist(FreqDist(wordList), bins=1e5)
+
+            return wordMap, tagMap
+
         def getSentences(self, selected_tagset):
-            tagged_sents = self.corpus.tagged_sents(tagset=selected_tagset)
+            taggedSents = self.corpus.tagged_sents(tagset=selected_tagset)
             sents = self.corpus.sents()
-            return tagged_sents, sents
+            return taggedSents, sents
 
         def splitTrainingTesting(self):
             train_sents = self.taggedSents[:self.trainSize]
@@ -27,7 +45,7 @@ class HMM:
         def output(self):
             print("Training Data: "+str(self.trainSize)+" Sentences")
             print("Testing Data: "+str(self.testingSize)+" Sentences")
-            print(self.uniqueTags)
+            print(self.testSents)
 
         def splitWordsTags(self):
             words = []
