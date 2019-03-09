@@ -8,7 +8,7 @@ class HMM:
             self.corpus = corpus
             self.taggedSents, self.sents = self.getSentences(tagset)
             self.trainSize = int(len(self.taggedSents) * 0.90)
-            self.testingSize = 500
+            self.testingSize = 5
             self.trainSents, self.testSents = self.splitTrainingTesting()
             self.words, self.tags = self.splitWordsTags()
             self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
@@ -16,8 +16,82 @@ class HMM:
             self.tagsDistribution = FreqDist(self.tags)
             self.uniqueTags = self.getUniqueTags()
             self.wordsDist, self.tagsDist = self.setProbDistributions()
-            self.finalTags = self.setTags()
+            #self.finalTags = self.setTags()
+            self.finalTags = self.viterbi()
             self.output()
+
+        def viterbi(self):
+            finalTags = []
+            probMatrix = []
+
+            for w in self.testingWords:
+                if w == "<s>":
+                    pass
+                         #finalTags.append("<s>")
+                elif w == "</s>":
+                    pass
+                        #finalTags.append("</s>")
+                else:
+                    col = []
+                    for t in self.uniqueTags:
+                        if w == 0:
+                            pT = self.tagsDist[finalTags[-1]].prob(t)
+                            pW = self.wordsDist[t].prob(w)
+                            col.append([pW*pT, "q0"])
+                        else:
+                            tagMap = {}
+                            for pp in range(0, len(self.uniqueTags) - 1):
+                                pT = self.tagsDist[self.uniqueTags[pp]].prob(t)
+                                pW = self.wordsDist[t].prob(w)
+                                tagMap[self.uniqueTags[pp]] = pT * pW * probMatrix[-1][pp][0]
+
+                            prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
+                            value = max(tagMap.items(), key=operator.itemgetter(1))[1]
+                            col.append(value, prevBestTag)
+                    probMatrix.append(col)
+                    finalTags = self.getTagsFromMatrix(probMatrix)
+            return finalTags
+
+        def getTagsFromMatrix(self, matrix):
+            finalTags=[]
+            pointer=""
+            pointerID=0
+            for i in range(len(self.testingWords), 1):
+                max=0
+                maxID=0
+                if i == range(len(self.testingWords)):
+                    for j in range(0, len(self.uniqueTags) - 1):
+                        if matrix[-i][j][0]>max:
+                            max=matrix[-i][j][0]
+                            maxID = j
+                    finalTags.append(self.uniqueTags[maxID])
+                    pointer = matrix[-i][maxID][1]
+                else:
+                    pointerID=self.uniqueTags.index(pointer)
+                    finalTags.append(self.uniqueTags[pointerID])
+                    pointer = matrix[-i][pointerID][1]
+
+            finalTags.reverse()
+            return finalTags
+
+        def setTags(self):
+            finalTags = []
+
+            for i in self.testingWords:
+                tagMap = {}
+                if i == "<s>":
+                    finalTags.append("<s>")
+                elif i == "</s>":
+                    finalTags.append("</s>")
+                else:
+
+                    for tag in self.uniqueTags:
+                        pT = self.tagsDist[finalTags[-1]].prob(tag)
+                        pW = self.wordsDist[tag].prob(i)
+                        tagMap[tag] = pT*pW
+                    finalTags.append(max(tagMap.items(), key=operator.itemgetter(1))[0])
+
+            return finalTags
 
         def setProbDistributions(self):
             tagMap = {}
@@ -36,25 +110,6 @@ class HMM:
 
             return wordMap, tagMap
 
-        def setTags(self):
-            finalTags = []
-
-            for i in self.testingWords:
-                tagMap = {}
-                if i == "<s>":
-                    finalTags.append("<s>")
-                elif i == "</s>":
-                    finalTags.append("</s>")
-                else:
-
-                    for tag in self.uniqueTags:
-                        pT = self.tagsDist[finalTags[-1]].prob(tag)/self.tagsDistribution.freq(finalTags[-1])
-                        pW = self.wordsDist[tag].prob(i)/self.tagsDistribution.freq(tag)
-                        tagMap[tag] = pT*pW
-                    finalTags.append(max(tagMap.items(), key=operator.itemgetter(1))[0])
-
-            return finalTags
-
 
         def getSentences(self, selected_tagset):
             taggedSents = self.corpus.tagged_sents(tagset=selected_tagset)
@@ -70,13 +125,13 @@ class HMM:
         def output(self):
             print("Training Data: "+str(self.trainSize)+" Sentences")
             print("Testing Data: "+str(self.testingSize)+" Sentences")
-            # print(self.testingTags)
-            # print("--------------------------")
-            # print(self.finalTags)
-            # print("--------------------------")
-            commonList = [i for i, j in zip(self.testingTags, self.finalTags) if i == j]
-            percent=len(commonList)/len(self.testingTags)
-            print(str(percent)+"% Accuracy")
+            print(self.testingTags)
+            print("--------------------------")
+            print(self.finalTags)
+            print("--------------------------")
+            # commonList = [i for i, j in zip(self.testingTags, self.finalTags) if i == j]
+            # percent = (len(commonList)/len(self.testingTags))*100
+            # print(str(percent)+"% Accuracy")
 
         def splitWordsTags(self):
             words = []
