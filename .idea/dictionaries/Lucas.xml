@@ -1,8 +1,10 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Lucas">
     <words>
+      <w>delim</w>
       <w>sents</w>
       <w>tagset</w>
+      <w>viterbi</w>
     </words>
   </dictionary>
 </component>

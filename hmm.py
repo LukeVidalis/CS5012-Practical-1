@@ -12,9 +12,12 @@ class HMM:
             self.trainSents, self.testSents = self.splitTrainingTesting()
             self.words, self.tags = self.splitWordsTags()
             self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
+
             self.testingWords, self.testingTags = self.splitWordsTagsTesting()
+            self.testingWordsNoDelim, self.testingTagsNoDelim = self.splitWordsTagsTestingNoDelim()
+
             self.tagsDistribution = FreqDist(self.tags)
-            self.uniqueTags = self.getUniqueTags()
+            self.uniqueTags, self.uniqueTagsNoDelim = self.getUniqueTags()
             self.wordsDist, self.tagsDist = self.setProbDistributions()
             #self.finalTags = self.setTags()
             self.finalTags = self.viterbi()
@@ -24,37 +27,37 @@ class HMM:
             finalTags = []
             probMatrix = []
 
-            for w in self.testingWords:
-                if w == "<s>":
-                    pass
-                         #finalTags.append("<s>")
-                elif w == "</s>":
-                    pass
-                        #finalTags.append("</s>")
-                else:
-                    col = []
-                    for t in self.uniqueTags:
-                        if w == 0:
-                            pT = self.tagsDist[finalTags[-1]].prob(t)
-                            pW = self.wordsDist[t].prob(w)
-                            col.append([pW*pT, "q0"])
-                        else:
-                            tagMap = {}
-                            for pp in range(0, len(self.uniqueTags) - 1):
-                                pT = self.tagsDist[self.uniqueTags[pp]].prob(t)
-                                pW = self.wordsDist[t].prob(w)
-                                tagMap[self.uniqueTags[pp]] = pT * pW * probMatrix[-1][pp][0]
+            for w in self.testingWordsNoDelim:
+                col = []
+                for t in self.uniqueTagsNoDelim:
 
-                            prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
-                            value = max(tagMap.items(), key=operator.itemgetter(1))[1]
-                            col.append(value, prevBestTag)
-                    probMatrix.append(col)
-                    finalTags = self.getTagsFromMatrix(probMatrix)
+                    
+                    if w == self.testingWordsNoDelim[0]:
+                        pT = self.tagsDist['<s>'].prob(t)
+                        pW = self.wordsDist[t].prob(w)
+                        col.append([pW*pT, "q0"])
+                        print("col: ", col)
+                    else:
+                        tagMap = {}
+                        for pp in range(0, len(self.uniqueTagsNoDelim) - 1):
+                            pT = self.tagsDist[self.uniqueTagsNoDelim[pp]].prob(t)
+                            pW = self.wordsDist[t].prob(w)
+                            print("pm: ", probMatrix)
+                            print("pp: ", pp)
+                            tagMap[self.uniqueTagsNoDelim[pp]] = pT * pW * probMatrix[-1][pp][0]
+
+                        prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
+                        value = max(tagMap.items(), key=operator.itemgetter(1))[1]
+                        col.append([value, prevBestTag])
+                print("col2: ", col)
+                probMatrix.append(col)
+
+            finalTags = self.getTagsFromMatrix(probMatrix)
             return finalTags
 
         def getTagsFromMatrix(self, matrix):
             finalTags=[]
-            pointer=""
+            pointer = ""
             pointerID=0
             for i in range(len(self.testingWords), 1):
                 max=0
@@ -72,6 +75,9 @@ class HMM:
                     pointer = matrix[-i][pointerID][1]
 
             finalTags.reverse()
+            print("finalTags: ")
+
+            print(finalTags)
             return finalTags
 
         def setTags(self):
@@ -125,7 +131,7 @@ class HMM:
         def output(self):
             print("Training Data: "+str(self.trainSize)+" Sentences")
             print("Testing Data: "+str(self.testingSize)+" Sentences")
-            print(self.testingTags)
+            print(self.testingWordsNoDelim)
             print("--------------------------")
             print(self.finalTags)
             print("--------------------------")
@@ -155,10 +161,26 @@ class HMM:
                 tags += startDelimeter + [t for (_, t) in s] + endDelimeter
             return words, tags
 
+        def splitWordsTagsTestingNoDelim(self):
+            words = []
+            tags = []
+
+
+            for s in self.check_sents:
+                words += [w for (w, _) in s]
+                tags += [t for (_, t) in s]
+            return words, tags
+
         def getUniqueTags(self):
             tagSet = set(self.tags)
             tagList = list(tagSet)
-            return tagList
+
+            noDelim = tagList.copy()
+
+            noDelim.remove('<s>')
+            noDelim.remove('</s>')
+
+            return tagList, noDelim
 
 
 def main():
