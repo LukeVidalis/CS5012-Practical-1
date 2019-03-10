@@ -1,5 +1,6 @@
 from nltk import FreqDist, WittenBellProbDist
 from nltk.corpus import brown
+from nltk.tag.util import untag
 import operator
 
 class HMM:
@@ -7,8 +8,8 @@ class HMM:
         def __init__(self, corpus, tagset=""):
             self.corpus = corpus
             self.taggedSents, self.sents = self.getSentences(tagset)
-            self.trainSize = int(len(self.taggedSents) * 0.90)
-            self.testingSize = 9
+            self.trainSize = int(len(self.taggedSents) * 0.95)
+            self.testingSize = 1000
             self.trainSents, self.testSents = self.splitTrainingTesting()
             self.words, self.tags = self.splitWordsTags()
             self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
@@ -24,45 +25,44 @@ class HMM:
             self.output()
 
         def viterbi(self):
+            finalTags=[]
             probMatrix = []
-            firstRun = True
-            for w in self.testingWordsNoDelim:
-                print(w)
-                col = []
-                for t in self.uniqueTagsNoDelim:
-                    
-                    if firstRun:
-                        pT = self.tagsDist['<s>'].prob(t)
-                        pW = self.wordsDist[t].prob(w)
-                        col.append([pW*pT, "q0"])
+            for s in self.testingWordsNoDelim:
+                firstRun = True
+                for word in s:
+                    col = []
+                    for t in self.uniqueTagsNoDelim:
 
-                    else:
-                        tagMap = {}
-                        for pp in range(0, len(self.uniqueTagsNoDelim)):
-                            pT = self.tagsDist[self.uniqueTagsNoDelim[pp]].prob(t)
-                            pW = self.wordsDist[t].prob(w)
-                            tagMap[self.uniqueTagsNoDelim[pp]] = pT * pW * probMatrix[-1][pp][0]
-                            if probMatrix[-1][pp][0]==0:
-                                print(probMatrix[-1])
+                        if firstRun:
+                            pT = self.tagsDist['<s>'].prob(t)
+                            pW = self.wordsDist[t].prob(word)
+                            col.append([pW*pT, "q0"])
 
+                        else:
+                            tagMap = {}
+                            for pp in range(0, len(self.uniqueTagsNoDelim)):
+                                pT = self.tagsDist[self.uniqueTagsNoDelim[pp]].prob(t)
+                                pW = self.wordsDist[t].prob(word)
 
-                                # print(pT, '*', pW, '*', probMatrix[-1][pp][0], '=', pT * pW * probMatrix[-1][pp][0])
+                                tagMap[self.uniqueTagsNoDelim[pp]] = pT * pW * probMatrix[-1][pp][0]
 
-                        prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
-                        value = max(tagMap.items(), key=operator.itemgetter(1))[1]
-                        col.append([value, prevBestTag])
-                probMatrix.append(col)
-                firstRun = False
-            finalTags = self.getTagsFromMatrix(probMatrix)
+                            prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
+                            value = max(tagMap.items(), key=operator.itemgetter(1))[1]
+
+                            col.append([value, prevBestTag])
+                    firstRun = False
+                    probMatrix.append(col)
+
+                finalTags.append(self.getTagsFromMatrix(probMatrix, s))
+
             return finalTags
 
-        def getTagsFromMatrix(self, matrix):
-            print(self.uniqueTagsNoDelim)
-            # print(matrix)
+        def getTagsFromMatrix(self, matrix, s):
+
             finalTags=[]
             pointer = ""
             pointerID = 0
-            for i in range(1, len(self.testingWordsNoDelim)+1):
+            for i in range(1, len(s)+1):
                 max = 0
                 maxID = 0
                 if i == 1:
@@ -146,8 +146,18 @@ class HMM:
             # percent = (len(commonList)/len(self.testingTags))*100
             # print(str(percent)+"% Accuracy")
 
-            commonList = [i for i, j in zip(self.testingTagsNoDelim, self.finalTags) if i == j]
-            percent = (len(commonList)/len(self.testingTagsNoDelim))*100
+            #commonList = [i for i, j in zip(self.testingTagsNoDelim, self.finalTags) if i == j]
+            correct =0;
+            total=0;
+            for s in range(0, len(self.testingTagsNoDelim)):
+                for t in range(0, len(self.testingTagsNoDelim[s])):
+                    if self.testingTagsNoDelim[s][t] == self.finalTags[s][t]:
+                        correct = correct+1
+                    total = total + 1
+
+            percent = (correct/total)*100
+
+            #percent = (len(commonList)/len(self.testingTagsNoDelim))*100
             print(str(percent)+"% Accuracy")
 
         def splitWordsTags(self):
@@ -173,13 +183,13 @@ class HMM:
             return words, tags
 
         def splitWordsTagsTestingNoDelim(self):
-            words = []
+            sentances = []
             tags = []
 
             for s in self.check_sents:
-                words += [w for (w, _) in s]
-                tags += [t for (_, t) in s]
-            return words, tags
+                sentances.append(untag(s))
+                tags.append([t for (_, t) in s])
+            return sentances, tags
 
         def getUniqueTags(self):
             tagSet = set(self.tags)
