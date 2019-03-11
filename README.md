@@ -13,14 +13,16 @@ testing_size: Number of sentances to be considered when testing the algortithm.
 beam_width: Beam width. This parameter should be only be used when using the Beam algorithm.
 
 ## Example
-'''bash
+```bash
 python hmm.py 1 10000 500 
-'''
+```
+
 This command will run the Viterbi algorithm with 10000 sentances used for training and 500 used for testing.
 
-'''bash
+```bash
 python hmm.py 2 20000 5000 4 
-'''
+```
+
 This command will run the Beam algorithm with a beam width of 4. 20000 sentances used for training and 5000 used for testing. 
 
 ## References
