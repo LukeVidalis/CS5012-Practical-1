@@ -36,7 +36,7 @@ class HMM:
                     self.finalTags = self.eager(self.k)
                     self.output()
                 else:
-                    print("Invalid Algorithm Argument.")
+                    print("Invalid Algorithm Argument. Hint: Beam algorithm requires an extra argument.")
 
         """
         Viterbi Algorithm
@@ -194,8 +194,8 @@ class HMM:
             print(self.finalTags)
             print("--------------------------")
 
-            correct =0;
-            total=0;
+            correct = 0
+            total = 0
             for s in range(0, len(self.testingTagsNoDelim)):
                 for t in range(0, len(self.testingTagsNoDelim[s])):
                     if self.testingTagsNoDelim[s][t] == self.finalTags[s][t]:
