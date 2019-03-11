@@ -2,30 +2,40 @@ from nltk import FreqDist, WittenBellProbDist
 from nltk.corpus import brown
 from nltk.tag.util import untag
 import operator
-
+import sys
 class HMM:
 
         def __init__(self, corpus, tagset=""):
-            self.corpus = corpus
-            self.taggedSents, self.sents = self.getSentences(tagset)
-            self.trainSize = int(len(self.taggedSents) * 0.95)
-            self.testingSize = 1000
-            self.trainSents, self.testSents = self.splitTrainingTesting()
-            self.words, self.tags = self.splitWordsTags()
-            self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
+            if len(sys.argv) < 4 or len(sys.argv) > 5:
+                print("Incorrect number of arguments.")
+                print("Arguments should be: <alg_ID> <training_size> <testing_size> <beam_width>(optional)")
+            else:
+                print(len(sys.argv))
+                self.corpus = corpus
+                self.taggedSents, self.sents = self.getSentences(tagset)
+                self.trainSize = int(sys.argv[2])
+                self.testingSize = int(sys.argv[3])
+                self.trainSents, self.testSents = self.splitTrainingTesting()
+                self.words, self.tags = self.splitWordsTags()
+                self.check_sents = self.taggedSents[self.trainSize:self.trainSize + self.testingSize]
 
-            self.testingWords, self.testingTags = self.splitWordsTagsTesting()
-            self.testingWordsNoDelim, self.testingTagsNoDelim = self.splitWordsTagsTestingNoDelim()
+                self.testingWords, self.testingTags = self.splitWordsTagsTesting()
+                self.testingWordsNoDelim, self.testingTagsNoDelim = self.splitWordsTagsTestingNoDelim()
 
-            self.tagsDistribution = FreqDist(self.tags)
-            self.uniqueTags, self.uniqueTagsNoDelim = self.getUniqueTags()
-            self.wordsDist, self.tagsDist = self.setProbDistributions()
-            #self.finalTags = self.setTags()
-            #self.finalTags = self.viterbi()
-            self.k = 1#len(self.uniqueTagsNoDelim)
-            self.finalTags = self.eager(self.k)
+                self.tagsDistribution = FreqDist(self.tags)
+                self.uniqueTags, self.uniqueTagsNoDelim = self.getUniqueTags()
+                self.wordsDist, self.tagsDist = self.setProbDistributions()
+                #self.finalTags = self.setTags()
 
-            self.output()
+                if int(sys.argv[1]) == 1:
+                    self.finalTags = self.viterbi()
+                    self.output()
+                elif int(sys.argv[1]) == 2 and len(sys.argv) == 5:
+                    self.k = int(sys.argv[4])
+                    self.finalTags = self.eager(self.k)
+                    self.output()
+                else:
+                    print("Invalid Algorithm Argument.")
 
         def viterbi(self):
             finalTags=[]
