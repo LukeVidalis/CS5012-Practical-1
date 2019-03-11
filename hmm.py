@@ -3,6 +3,8 @@ from nltk.corpus import brown
 from nltk.tag.util import untag
 import operator
 import sys
+
+
 class HMM:
 
         def __init__(self, corpus, tagset=""):
@@ -25,7 +27,6 @@ class HMM:
                 self.tagsDistribution = FreqDist(self.tags)
                 self.uniqueTags, self.uniqueTagsNoDelim = self.getUniqueTags()
                 self.wordsDist, self.tagsDist = self.setProbDistributions()
-                #self.finalTags = self.setTags()
 
                 if int(sys.argv[1]) == 1:
                     self.finalTags = self.viterbi()
@@ -37,6 +38,9 @@ class HMM:
                 else:
                     print("Invalid Algorithm Argument.")
 
+        """
+        Viterbi Algorithm
+        """
         def viterbi(self):
             finalTags=[]
             probMatrix = []
@@ -69,7 +73,10 @@ class HMM:
                 finalTags.append(self.getTagsFromMatrix(probMatrix, s))
 
             return finalTags
-
+        """
+        Beam algorithm
+        #Parameter k is beam length
+        """
         def eager(self, k):
             finalTags=[]
             probMatrix = []
@@ -152,25 +159,6 @@ class HMM:
 
             return finalTags
 
-        def setTags(self):
-            finalTags = []
-
-            for i in self.testingWords:
-                tagMap = {}
-                if i == "<s>":
-                    finalTags.append("<s>")
-                elif i == "</s>":
-                    finalTags.append("</s>")
-                else:
-
-                    for tag in self.uniqueTags:
-                        pT = self.tagsDist[finalTags[-1]].prob(tag)
-                        pW = self.wordsDist[tag].prob(i)
-                        tagMap[tag] = pT*pW
-                    finalTags.append(max(tagMap.items(), key=operator.itemgetter(1))[0])
-
-            return finalTags
-
         def setProbDistributions(self):
             tagMap = {}
             wordMap = {}
@@ -201,20 +189,11 @@ class HMM:
             return train_sents, test_sents
 
         def output(self):
-            print("Training Data: "+str(self.trainSize)+" Sentences")
-            print("Testing Data: "+str(self.testingSize)+" Sentences")
-            print(len(self.testingTagsNoDelim))
-            print(len(self.finalTags))
-
             print(self.testingTagsNoDelim)
             print("--------------------------")
             print(self.finalTags)
             print("--------------------------")
-            # commonList = [i for i, j in zip(self.testingTags, self.finalTags) if i == j]
-            # percent = (len(commonList)/len(self.testingTags))*100
-            # print(str(percent)+"% Accuracy")
 
-            #commonList = [i for i, j in zip(self.testingTagsNoDelim, self.finalTags) if i == j]
             correct =0;
             total=0;
             for s in range(0, len(self.testingTagsNoDelim)):
@@ -225,7 +204,10 @@ class HMM:
 
             percent = (correct/total)*100
 
-            #percent = (len(commonList)/len(self.testingTagsNoDelim))*100
+            print("Training Data: " + str(self.trainSize) + " Sentences")
+            print("Testing Data: " + str(self.testingSize) + " Sentences")
+            print(len(self.testingTagsNoDelim))
+            print(len(self.finalTags))
             print(str(percent)+"% Accuracy")
 
         def splitWordsTags(self):
