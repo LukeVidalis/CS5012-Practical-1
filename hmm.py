@@ -21,7 +21,10 @@ class HMM:
             self.uniqueTags, self.uniqueTagsNoDelim = self.getUniqueTags()
             self.wordsDist, self.tagsDist = self.setProbDistributions()
             #self.finalTags = self.setTags()
-            self.finalTags = self.viterbi()
+            #self.finalTags = self.viterbi()
+            self.k = 1#len(self.uniqueTagsNoDelim)
+            self.finalTags = self.eager(self.k)
+
             self.output()
 
         def viterbi(self):
@@ -57,11 +60,50 @@ class HMM:
 
             return finalTags
 
+        def eager(self, k):
+            finalTags=[]
+            probMatrix = []
+            for s in self.testingWordsNoDelim:
+                firstRun = True
+                for word in s:
+                    col = {}
+                    tempList = []
+                    for t in self.uniqueTagsNoDelim:
+
+                        if firstRun:
+                            pT = self.tagsDist['<s>'].prob(t)
+                            pW = self.wordsDist[t].prob(word)
+                            tempList.append([pW*pT, "q0", t])
+
+                        else:
+                            tagMap = {}
+                            #print(probMatrix[-1])
+                            for key in probMatrix[-1].items():
+                                #print(key)
+                                pT = self.tagsDist[key[0]].prob(t)
+                                pW = self.wordsDist[t].prob(word)
+
+                                tagMap[key[0]] = pT * pW * probMatrix[-1][key[0]][0]
+
+                            prevBestTag = max(tagMap.items(), key=operator.itemgetter(1))[0]
+                            value = max(tagMap.items(), key=operator.itemgetter(1))[1]
+
+                            tempList.append([value, prevBestTag, t])
+                    firstRun = False
+                    tempList.sort(reverse=True, key=lambda tup: tup[0])
+                    for i in range(0, k):
+                        col[tempList[i][2]] = [tempList[i][0], tempList[i][1]]
+                    probMatrix.append(col)
+
+                finalTags.append(self.getTagsForBeam(probMatrix, s))
+
+            return finalTags
+
         def getTagsFromMatrix(self, matrix, s):
 
             finalTags=[]
             pointer = ""
-            pointerID = 0
+
             for i in range(1, len(s)+1):
                 max = 0
                 maxID = 0
@@ -80,6 +122,22 @@ class HMM:
                     finalTags.append(self.uniqueTagsNoDelim[pointerID])
                     pointer = matrix[-i][pointerID][1]
 
+            finalTags.reverse()
+
+            return finalTags
+
+        def getTagsForBeam(self, matrix, s):
+
+            finalTags=[]
+            pointer = ""
+
+            for i in range(1, len(s)+1):
+                if i == 1:
+                    finalTags.append((sorted(matrix[-i], key=matrix[-i].get, reverse=True)[:1])[0])
+                    pointer = matrix[-i][(sorted(matrix[-i], key=matrix[-i].get, reverse=True)[:1])[0]][1]
+                else:
+                    finalTags.append(pointer)
+                    pointer = matrix[-i][pointer][1]
             finalTags.reverse()
 
             return finalTags
