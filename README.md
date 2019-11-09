@@ -26,4 +26,4 @@ python hmm.py 2 20000 5000 4
 This command will run the Beam Search algorithm with a beam width of 4. 20000 sentances used for training and 5000 used for testing. 
 
 ## References
-The [Natural Language toolkit 3.4](https://www.nltk.org/) was used for the creation of this algorithm. The brown corpus was used for training and testing purposes.
+The [Natural Language toolkit 3.4](https://www.nltk.org/) was used for the creation of this algorithm. The Brown corpus was used for training and testing purposes.
