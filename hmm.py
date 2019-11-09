@@ -12,7 +12,6 @@ class HMM:
                 print("Incorrect number of arguments.")
                 print("Arguments should be: <alg_ID> <training_size> <testing_size> <beam_width>(optional)")
             else:
-                print(len(sys.argv))
                 self.corpus = corpus
                 self.taggedSents, self.sents = self.getSentences(tagset)
                 self.trainSize = int(sys.argv[2])
@@ -36,7 +35,7 @@ class HMM:
                     self.finalTags = self.eager(self.k)
                     self.output()
                 else:
-                    print("Invalid Algorithm Argument. Hint: Beam algorithm requires an extra argument.")
+                    print("Invalid Algorithm Argument. Hint: Beam Search algorithm requires an extra argument.")
 
         """
         Viterbi Algorithm
@@ -206,8 +205,6 @@ class HMM:
 
             print("Training Data: " + str(self.trainSize) + " Sentences")
             print("Testing Data: " + str(self.testingSize) + " Sentences")
-            print(len(self.testingTagsNoDelim))
-            print(len(self.finalTags))
             print(str(percent)+"% Accuracy")
 
         def splitWordsTags(self):

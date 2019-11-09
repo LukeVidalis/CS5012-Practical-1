@@ -1,10 +1,10 @@
-# CS5012-Practiacal-1
-This program implements POS Tagging using Hidden Markov Models. The two algorithms implemented are the Viterbi algorithm and the Beam Algorithm
+# POS Tagging using Hidden Markov Models
+This program implements POS Tagging using Hidden Markov Models and was created in the context of the `CS5012` module. The two algorithms implemented are the Viterbi algorithm and the Beam Search Algorithm. More information about the implementation of this project can be found in the [report](Report.md).
 
 ## Usage
 Command Line Arguments: python hmm.py <alg_ID> <training_size> <testing_size> <beam_width>(optional)
 
-alg_ID: 1 for Viterbi algorithm, 2 for Beam algorithm.
+alg_ID: 1 for Viterbi algorithm, 2 for Beam Search algorithm.
 
 training_size: Number of sentances to be considered for training the algorithm.
 
@@ -23,7 +23,7 @@ This command will run the Viterbi algorithm with 10000 sentances used for traini
 python hmm.py 2 20000 5000 4 
 ```
 
-This command will run the Beam algorithm with a beam width of 4. 20000 sentances used for training and 5000 used for testing. 
+This command will run the Beam Search algorithm with a beam width of 4. 20000 sentances used for training and 5000 used for testing. 
 
 ## References
 The [Natural Language toolkit 3.4](https://www.nltk.org/) was used for the creation of this algorithm. The brown corpus was used for training and testing purposes.
